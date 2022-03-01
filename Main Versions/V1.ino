@@ -16,12 +16,25 @@ void setup() {
 
 //Control Loop
 void loop() {
-  Calibration
-  int Value = Sensing();
   Output();
   delay(500); //delay 1/2 second between taking readings
 
 }
+
+//-----------------------------------------------------------------------------------------------------
+
+//Calibrative Values (Future work to change this to active code)
+class Calibration {
+public:
+  char State;
+
+  int Analoug_Max_V;
+  int Analoug_Max_Bit;
+
+  float HallEffect1_Pin = A0; 
+  float HallEffect2_Pin;
+  float HallEffect3_Pin;
+};
 
 //-----------------------------------------------------------------------------------------------------
 
@@ -41,7 +54,7 @@ void Read()
 //Outputing and displaying vValues
 void Output() {
 
-  int Value = Sensing.Read()
+  int Value = Sensing::Value;
 
   //Returing value along serial port
   Serial.println(Value);
@@ -54,20 +67,3 @@ void Output() {
 }
 
 //-----------------------------------------------------------------------------------------------------
-
-//Calibrative Values (Future work to change this to active code)
-class Calibration {
-public:
-struct data_stream_command_in_type {
-  char State;
-
-  int Analoug_Max_V;
-  int Analoug_Max_Bit;
-
-  float HallEffect1_Pin = A0; 
-  float HallEffect2_Pin;
-  float HallEffect3_Pin;
-};
-
-
-};
