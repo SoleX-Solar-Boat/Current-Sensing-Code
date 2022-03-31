@@ -20,4 +20,3 @@ void loop() {
   delay(500);             //delay 1/2 second
     
 }
->>>>>>> de5005340c4957f18e9808d2d7c3513778290e45:CurrentTest2.ino
