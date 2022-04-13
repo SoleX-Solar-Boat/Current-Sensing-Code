@@ -35,6 +35,9 @@ float countOFAllBufferResets = 0.00;
 float countOfAllMessagesCorreclyBounded = 0.00;
 float bufferResetMax = 400000000.00; //4294967040
 
+//Sensor output calibration
+int Analog_V_Range = 5;
+int Analog_Bit_Range = 1024;
 
 
 
