@@ -1,10 +1,3 @@
-//Recvies sent messages as indiviudla bytes "<S22>"
-//ToDO
-//	-Recive into array that can then be translated into real value with identifier, '<' and '>' used to verifiy message end and start
-
-
-
-
 #include <SoftwareSerial.h>
 //-----------------------------------------------------------//
 /**
@@ -44,12 +37,59 @@ void setup() {
   
 }
 
+void recv_Wraped_Message(){
+
+	static boolean recvInProgress = false;
+	static byte ndx = 0;
+
+	boolean newData = false;
+	newInstruction = false;
+	boolean messageStarted = false;
+
+	char charReadFromSerial;
+	
+
+	while (softSerial.available() > 0 && newData == false) {
+		charReadFromSerial = (char) softSerial.read();
+
+		if (recvInProgress == true) {
+			if (charReadFromSerial != charEndMarker) {
+				receivedChar[ndx] = charReadFromSerial;
+				ndx++;
+				if (ndx >= numBytes) {
+					ndx = numBytes - 1;
+				}
+			} 
+			else {
+				//countMessageNumber(messageStarted);
+				receivedChar[ndx] = '\0'; // terminate the string
+				recvInProgress = false;
+				numReceived = ndx; // save the number for use when printing
+				ndx = 0;
+				newData = true;
+				newInstruction = true;
+             	              
+			}
+        } 
+		 else if (charReadFromSerial == charStartMarker) {
+           		memset(receivedChar, 0, sizeof receivedChar);
+				recvInProgress = true;
+				messageStarted = true;
+		}
+	}
+}
+
+
+
 void loop() 
 {
-  while (softSerial.available() > 0) {
-    char inByte = softSerial.read();
-    Serial.write(inByte);
-    softSerial.flush();
-  }
+  recv_Wraped_Message();
+  //Verfication
+  int Test = sizeof(receivedChar);
+  Serial.println(receivedChar);
+  //if (sizeof(receivedChar) == 5){
+  //    Serial.write(receivedChar);
+  //}
+  
 }
  

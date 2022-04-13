@@ -50,8 +50,15 @@ void setup()
 
 void loop()  
 { 
-  double Reading = analogRead(A0);
-  Reading = Reading /10.00;
+  /Digital reading
+	int Digital_Sensor_Reading = analogRead (A0);
+
+  //Digtial to Analog converter
+  double conversion_factor = Analog_Bit_Range/Analog_V_Range;
+  double Analog_Sensor_Reading = Digital_Sensor_Reading/conversion_factor;
+
+  //Voltage to Current Reading
+  double Current = (((Analog_Sensor_Reading-Vref)/1.25)*Sensor_Ipn);
   Serial.print("Reading");
   Serial.println(Reading);
   
@@ -69,4 +76,5 @@ void loop()
   Serial.println(message);
   
   delay(delayAfterSendingMessage);
+  
 }
