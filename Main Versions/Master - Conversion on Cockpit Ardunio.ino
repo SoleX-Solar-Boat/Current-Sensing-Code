@@ -1,4 +1,4 @@
-/**
+ /**
 	Current Sensing, Processing and Display Code - K. Lister-Grotz & M. Richmond
 	28.03.2022
 
@@ -13,7 +13,7 @@
 */
 #include <Arduino.h>
 #include <SoftwareSerial.h>
-#include<cmath>
+#include<math.h>
 
 
 //-----------------------------------------------------------//
@@ -97,19 +97,8 @@ double LEM_HTFS_Current(int Digital_Sensor_Reading, int Vref, int Ipn){
 	double Current = (((Analog_Sensor_Reading-Vref)/1.25)*Ipn);
 
 
-	return Current
+	return Current;
 }
-
-//-----------------------------------------------------------//
-/**
-	Converting 2dp Double to integer string
-*/
-int Double_To_5DString(double Value_To_Convert){
-	int Int_Value = Value_To_Convert * 100 ;//shifting first 2dp left, and converting to int 
-	String String_Value = String(Int_Value)
-
-	return String_Value
-} 
 
 //-----------------------------------------------------------//
 /**
@@ -169,7 +158,7 @@ void Wrap_Send_Message(int Reading, char ID_Marker){
 
 
 	softSerial.print(charStartMarker);
-	softSerial.print(length)
+	softSerial.print(length);
 	softSerial.print(ID_Marker);
 	softSerial.print(message);
 	softSerial.print(charEndMarker);
@@ -230,14 +219,14 @@ void recv_Wraped_Message(){
 void Sensor_Arduino() {
 
 	//Read data and send Messages
-	Wrap_Send_Message(analogRead (HallEffect_SolarOutput_Pin), SolarOutput_ID)
-	delay(delayAfterSendingMessage)
+	Wrap_Send_Message(analogRead (HallEffect_SolarOutput_Pin), SolarOutput_ID);
+	delay(delayAfterSendingMessage);
 
-	Wrap_Send_Message(analogRead (HallEffect_MotorInput_Pin), MotorInput_ID)
-	delay(delayAfterSendingMessage)
+	Wrap_Send_Message(analogRead (HallEffect_MotorInput_Pin), MotorInput_ID);
+	delay(delayAfterSendingMessage);
 
-	Wrap_Send_Message(analogRead (HallEffect_BatteryInput_Pin), BatteryInput_ID)
-	delay(delayAfterSendingMessage)
+	Wrap_Send_Message(analogRead (HallEffect_BatteryInput_Pin), BatteryInput_ID);
+	delay(delayAfterSendingMessage);
 
 }
 
@@ -247,14 +236,15 @@ void Sensor_Arduino() {
 */
 void Cockpit_Arduino(){
 
-	double Vref = 2.5
+	double Vref = 2.5;
 
-	recv_Wraped_Message()
+	recv_Wraped_Message();
 
 	char Recived_Length = receivedChar[0];
 	char Recived_ID = receivedChar[1];
 	char Recived_MSG[numBytes - 1];
 	memset(Recived_MSG, 0, sizeof Recived_MSG);
+	int Recived_Value = 0;
 
 
 	//through into while loop
@@ -269,19 +259,19 @@ void Cockpit_Arduino(){
 		}
 
 		//Extract msg
-		for (int = 0; i <= 3; i++){
-		char digit = receivedChar[i + 1]
+		for (int i = 0; i <= 3; i++){
+		char digit = receivedChar[i + 1];
 			if (TrueINT(digit, 48, 57)){
-				Recived_MSG[i] = digit:
-				Real_Value = true;
+				Recived_MSG[i] = digit;
+				corruput = false;
 			}
 			else {
-				break
+				corruput = true;
 			}
 		}
 
 		//Verify msg length
-		int Recived_Value = atoi(Recived_MSG);
+		Recived_Value = atoi(Recived_MSG);
 		int MSG_Size = trunc(log10(Recived_Value)) + 1;
 		if (MSG_Size == Recived_Length){
 			corruput = false;
@@ -312,8 +302,8 @@ void Cockpit_Arduino(){
 */
 void loop() {
 
-	//Cockpit_Arduino()
+	//Cockpit_Arduino();
 		//or
-	Sensor_Arduino()
+	Sensor_Arduino();
 	
 }
