@@ -36,7 +36,7 @@ int HallEffect_BatteryInput_Pin = A1;
 int HallEffect_MotorInput_Pin = A2;
 
 //Sensor Primary Nominal rms current
-int HallEffect_SolarOutput_NominalCurrent = 200; 
+int HallEffect_SolarOutput_NominalCurrent = 100; 
 int HallEffect_BatteryInput_NominalCurrent = 200;
 int HallEffect_MotorInput_NominalCurrent = 200;
 
@@ -95,6 +95,19 @@ double LEM_HTFS_Current(int Digital_Sensor_Reading, int Vref, int Ipn){
 
 	//Voltage to Current Reading
 	double Current = (((Analog_Sensor_Reading-Vref)/1.25)*Ipn);
+
+
+	return Current;
+}
+
+double LEM_HASS_Current(int Digital_Sensor_Reading, int Vref, int Ipn){
+
+	//Digtial to Analog converter
+	double conversion_factor = Analog_Bit_Range/Analog_V_Range;
+	double Analog_Sensor_Reading = Digital_Sensor_Reading/conversion_factor;
+
+	//Voltage to Current Reading
+	double Current = (((Analog_Sensor_Reading-Vref)/0.625)*Ipn);
 
 
 	return Current;
@@ -292,7 +305,15 @@ void Cockpit_Arduino(){
 		else if (Recived_ID == 'M'){
 			Motor_Curret = Recived_Value;
 		}
+		break;
 	}
+	//debug
+	Serial.println(Recived_Length);
+	Serial.println(Recived_ID);
+	Serial.println(Recived_MSG);
+	Serial.println(Recived_Value);
+	Serial.println(Solar_Curret);
+
 }
 
 
