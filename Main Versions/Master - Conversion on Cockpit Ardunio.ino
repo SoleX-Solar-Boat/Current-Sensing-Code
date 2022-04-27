@@ -297,13 +297,13 @@ void Cockpit_Arduino(){
 
 	if (corruput = false){
 		if (Recived_ID == 'S'){
-			Solar_Curret = Recived_Value;
+			Solar_Curret = LEM_HTFS_Current(Recived_Value);
 		}
 		else if (Recived_ID == 'B'){
-			Battery_Curret = Recived_Value;
+			Battery_Curret = LEM_HTFS_Current(Recived_Value);
 		}
 		else if (Recived_ID == 'M'){
-			Motor_Curret = Recived_Value;
+			Motor_Curret = LEM_HTFS_Current(Recived_Value);
 		}
 		break;
 	}
