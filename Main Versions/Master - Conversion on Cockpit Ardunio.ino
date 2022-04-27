@@ -8,8 +8,8 @@
 	ToDo:
 		-Self Calibration, need access to solar boat completed electronics
 		-LCD_Output
-		-Cockpit_Arduino, data extraction, verfication, storage and processing
-		-Decrypt message
+		-Extract message broken
+		-Convert raw into current value
 */
 #include <Arduino.h>
 #include <SoftwareSerial.h>
@@ -271,7 +271,7 @@ void Cockpit_Arduino(){
 			corruput = true;
 		}
 
-		//Extract msg
+		//Extract msg (not working!!)
 		for (int i = 0; i <= 3; i++){
 		char digit = receivedChar[i + 1];
 			if (TrueINT(digit, 48, 57)){
@@ -297,22 +297,15 @@ void Cockpit_Arduino(){
 
 	if (corruput = false){
 		if (Recived_ID == 'S'){
-			Solar_Curret = LEM_HTFS_Current(Recived_Value);
+			Solar_Curret = Recived_Value;
 		}
 		else if (Recived_ID == 'B'){
-			Battery_Curret = LEM_HTFS_Current(Recived_Value);
+			Battery_Curret = Recived_Value;
 		}
 		else if (Recived_ID == 'M'){
-			Motor_Curret = LEM_HTFS_Current(Recived_Value);
+			Motor_Curret = Recived_Value;
 		}
-		break;
 	}
-	//debug
-	Serial.println(Recived_Length);
-	Serial.println(Recived_ID);
-	Serial.println(Recived_MSG);
-	Serial.println(Recived_Value);
-	Serial.println(Solar_Curret);
 
 }
 
