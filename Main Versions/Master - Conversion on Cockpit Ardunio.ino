@@ -13,13 +13,17 @@
 */
 #include <Arduino.h>
 #include <SoftwareSerial.h>
+#include<cmath>
 
 
 //-----------------------------------------------------------//
 /**
-	*Fixed Values for use through out the project
+	*Values and variables for use through out the project
 */
-bool Calibration_State;
+bool Calibration_State = false;
+float Solar_Curret;
+float Battery_Curret;
+float Motor_Curret;
 
 
 //-----------------------------------------------------------//
@@ -39,30 +43,6 @@ int HallEffect_MotorInput_NominalCurrent = 200;
 //Sensor output calibration
 int Analog_V_Range = 5;
 int Analog_Bit_Range = 1024;
-
-/**
-	Reading sensor digital value and then converting to current value
-	Equation for converting the analog volatge value into a current reading for the LEM Current Transducer HTFS200...800p
-	Vout = Vref +-(1.25*Ip/Ipn)
-	Vout = Sensor Voltage
-	Ip = Current
-	Ipn = Sensor Primary Nominal rms current
-*/
-double LEM_HTFS_Current(int Sensor_Ipn, int Sensor_Pin, int Sensor_Vref){
-
-	//Digital reading
-	int Digital_Sensor_Reading = analogRead (sensorPin);
-
-	//Digtial to Analog converter
-	double conversion_factor = Analog_Bit_Range/Analog_V_Range;
-	double Analog_Sensor_Reading = Digital_Sensor_Reading/conversion_factor;
-
-	//Voltage to Current Reading
-	double Current = (((Analog_Sensor_Reading-Vref)/1.25)*Sensor_Ipn);
-
-
-	return Current
-}
 
 
 //-----------------------------------------------------------//
@@ -101,6 +81,47 @@ float bufferResetMax = 400000000.00; //4294967040
 
 //-----------------------------------------------------------//
 /**
+	Equation for converting the analog volatge value into a current reading for the LEM Current Transducer HTFS200...800p
+	Vout = Vref +-(1.25*Ip/Ipn)
+	Vout = Sensor Voltage
+	Ip = Current
+	Ipn = Sensor Primary Nominal rms current
+*/
+double LEM_HTFS_Current(int Digital_Sensor_Reading, int Vref, int Ipn){
+
+	//Digtial to Analog converter
+	double conversion_factor = Analog_Bit_Range/Analog_V_Range;
+	double Analog_Sensor_Reading = Digital_Sensor_Reading/conversion_factor;
+
+	//Voltage to Current Reading
+	double Current = (((Analog_Sensor_Reading-Vref)/1.25)*Ipn);
+
+
+	return Current
+}
+
+//-----------------------------------------------------------//
+/**
+	Converting 2dp Double to integer string
+*/
+int Double_To_5DString(double Value_To_Convert){
+	int Int_Value = Value_To_Convert * 100 ;//shifting first 2dp left, and converting to int 
+	String String_Value = String(Int_Value)
+
+	return String_Value
+} 
+
+//-----------------------------------------------------------//
+/**
+	Can check if int within a range
+*/
+bool TrueINT(int val, int minimum, int maximum)
+{
+  return ((minimum <= val) && (val <= maximum));
+}
+
+//-----------------------------------------------------------//
+/**
 	Placeholder
 */
 void setup() {
@@ -110,7 +131,6 @@ void setup() {
 	softSerial.flush();
 }
 
-
 //-----------------------------------------------------------//
 /**
 	Placeholder
@@ -118,7 +138,6 @@ void setup() {
 void calibration(){
 
 }
-
 
 //-----------------------------------------------------------//
 /**
@@ -128,25 +147,35 @@ void LCD_Output(){
 
 }
 
-
 //-----------------------------------------------------------//
 /**
 	PlaceHolder
 */
-void Wrap_Send_Message(String message, char ID_Marker){
+void Wrap_Send_Message(int Reading, char ID_Marker){
+
+	int length;
+	String message = String(Reading);
+
+
+	if (Reading >= 100){
+		length = 3;
+	}
+	if (Reading >=10 && Reading <=99){
+		length = 2;
+	}
+	if (Reading >= 0 && Reading <=9){
+		length = 1;
+	}
 
 
 	softSerial.print(charStartMarker);
+	softSerial.print(length)
 	softSerial.print(ID_Marker);
 	softSerial.print(message);
 	softSerial.print(charEndMarker);
 
-	Serial.print("sent ");
-	Serial.println(message);
-
 	delay(delayAfterSendingMessage);
 }
-
 
 //-----------------------------------------------------------//
 /**
@@ -196,44 +225,20 @@ void recv_Wraped_Message(){
 
 //-----------------------------------------------------------//
 /**
-	Converting 2dp Double to integer string
-*/
-int Double_To_5DString(double Value_To_Convert){
-	int Int_Value = Value_To_Convert * 100 ;//shifting first 2dp left, and converting to int 
-	String String_Value = String(Int_Value)
-
-	return String_Value
-} 
-
-//-----------------------------------------------------------//
-/**
 	Placeholder
 */
 void Sensor_Arduino() {
 
-	double Vref = 2.5
-
-	//LEM_HTFS_Current(int Sensor_Ipn, int Sensor_Pin, int Sensor_Vref)
-	double SolarOutput_Current = LEM_HTFS_Current(HallEffect_SolarOutput_NominalCurrent, HallEffect_SolarOutput_Pin, Vref);
-	double MotorInput_Curent = LEM_HTFS_Current(HallEffect_MotorInput_NominalCurrent, HallEffect_SolarOutput_Pin, Vref);
-	double BatteryInput_Current =LEM_HTFS_Current(HallEffect_BatteryInput_NominalCurrent, HallEffect_BatteryInput_Pin, Vref);
-
-	//Send Messages
-	Wrap_Send_Message(Double_To_5DString(SolarOutput_Current), SolarOutput_ID)
+	//Read data and send Messages
+	Wrap_Send_Message(analogRead (HallEffect_SolarOutput_Pin), SolarOutput_ID)
 	delay(delayAfterSendingMessage)
 
-	Wrap_Send_Message(Double_To_5DString(MotorInput_Curent), MotorInput_ID)
+	Wrap_Send_Message(analogRead (HallEffect_MotorInput_Pin), MotorInput_ID)
 	delay(delayAfterSendingMessage)
 
-	Wrap_Send_Message(Double_To_5DString(BatteryInput_Current), BatteryInput_ID)
+	Wrap_Send_Message(analogRead (HallEffect_BatteryInput_Pin), BatteryInput_ID)
 	delay(delayAfterSendingMessage)
 
-}
-
-
-bool TrueINT(int val, int minimum, int maximum)
-{
-  return ((minimum <= val) && (val <= maximum));
 }
 
 //-----------------------------------------------------------//
@@ -242,40 +247,62 @@ bool TrueINT(int val, int minimum, int maximum)
 */
 void Cockpit_Arduino(){
 
+	double Vref = 2.5
+
 	recv_Wraped_Message()
 
-	char Recived_ID = receivedChar[0];
+	char Recived_Length = receivedChar[0];
+	char Recived_ID = receivedChar[1];
 	char Recived_MSG[numBytes - 1];
-	memset(Recived_MSG, 0, sizeof Recived_MSG)
+	memset(Recived_MSG, 0, sizeof Recived_MSG);
 
 
 	//through into while loop
+	bool corruput = false;
+	while (corruput = false){
+		//First Corrupt check
+		if (Recived_ID == 'S' || Recived_ID == 'B' || Recived_ID == 'M') {
+			corruput = false;
+		}
+		else{
+			corruput = true;
+		}
 
-	bool Real_Value = true;
-	while (Real_Value == true){
-
+		//Extract msg
 		for (int = 0; i <= 3; i++){
-			char digit = receivedChar[i + 1]
-			Recived_MSG[i] = digit:
-
+		char digit = receivedChar[i + 1]
 			if (TrueINT(digit, 48, 57)){
+				Recived_MSG[i] = digit:
 				Real_Value = true;
 			}
 			else {
-				Real_Value = false;
+				break
 			}
 		}
 
-		double Recived_Value = atoi(Recived_MSG);
-		Recived_Value = Recived_Value/ 100;
-
-		//4 digit integer check then assign
-
-		Real_Value = false
+		//Verify msg length
+		int Recived_Value = atoi(Recived_MSG);
+		int MSG_Size = trunc(log10(Recived_Value)) + 1;
+		if (MSG_Size == Recived_Length){
+			corruput = false;
+		}
+		else{
+			corruput = true;
+		}
+		break;
 	}
 
-
-
+	if (corruput = false){
+		if (Recived_ID == 'S'){
+			Solar_Curret = Recived_Value;
+		}
+		else if (Recived_ID == 'B'){
+			Battery_Curret = Recived_Value;
+		}
+		else if (Recived_ID == 'M'){
+			Motor_Curret = Recived_Value;
+		}
+	}
 }
 
 
