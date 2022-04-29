@@ -2,12 +2,13 @@
 	Current Sensing, Processing and Display Code - K. Lister-Grotz & M. Richmond
 	28.03.2022
 	Notes:
-		-
-	ToDo:
-		-Self Calibration, need access to solar boat completed electronics
-		-LCD_Output
+		-Before debugging::: CHECK PIN VALUES, CHECK COMMON GROUND!!!!!
 		-Issue when sensor digital value = 0, so current massivley negative that exceeds sensor range
+	ToDo
 		-Test conversion equations with sensors
+		-LCD_Output
+		-Self Calibration, need access to solar boat completed electronics
+
 */
 #include <Arduino.h>
 #include <SoftwareSerial.h>
