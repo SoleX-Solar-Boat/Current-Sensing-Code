@@ -99,7 +99,6 @@ double LEM_HTFS_Current(int Digital_Sensor_Reading, int Vref, int Ipn){
 
 	return Current;
 }
-
 //-----------------------------------------------------------//
 /**
 	Placeholder
@@ -179,8 +178,6 @@ void Wrap_Send_Message(int Reading, char ID_Marker){
 	softSerial.print(ID_Marker);
 	softSerial.print(message);
 	softSerial.print(charEndMarker);
-
-	delay(delayAfterSendingMessage);
 }
 
 //-----------------------------------------------------------//
@@ -310,10 +307,7 @@ void Cockpit_Arduino(){
 			Motor_Curret = Recived_Value;
 		}
 	}
-<<<<<<< HEAD
 
-=======
->>>>>>> parent of f58c09b (add debug stuff in cockpit ardunion code)
 }
 
 
