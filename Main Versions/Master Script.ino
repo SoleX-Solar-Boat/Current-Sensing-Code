@@ -6,7 +6,8 @@
 	ToDo:
 		-Self Calibration, need access to solar boat completed electronics
 		-LCD_Output
-		-Message Extraction not working, recives full message but doesnt extract
+		-Issue when sensor digital value = 0, so current massivley negative that exceeds sensor range
+		-Test conversion equations with sensors
 */
 #include <Arduino.h>
 #include <SoftwareSerial.h>
@@ -139,7 +140,10 @@ void LCD_Output(){
 void Wrap_Send_Message(int Reading, char ID_Marker){
 	int length;
 	String message = String(Reading);
-	if (Reading >= 100){
+	if (Reading >= 1000){
+		length = 4;
+	}
+	if (Reading >= 100 && Reading <= 999){
 		length = 3;
 	}
 	if (Reading >=10 && Reading <=99){
@@ -222,12 +226,14 @@ void Cockpit_Arduino(){
 
 	char Recived_Length = receivedChar[0];
 	char Recived_ID = receivedChar[1];
-	char Recived_MSG[numBytes - 1];
+	char Recived_MSG[numBytes];
 	memset(Recived_MSG, 0, sizeof Recived_MSG);
 	int Recived_Value = 0;
+	char digit;
 	
 	bool corruput = false;
-	while (corruput = false){
+	while (corruput == false){
+
 		//First Corrupt check
 		if (Recived_ID == 'S' || Recived_ID == 'B' || Recived_ID == 'M') {
 			corruput = false;
@@ -235,21 +241,23 @@ void Cockpit_Arduino(){
 		else{
 			corruput = true;
 		}
+
 		//Extract msg (not working!!)
-		for (int i = 0; i <= 3; i++){
-		char digit = receivedChar[i + 1];
+		for (int i = 0; i <= sizeof(receivedChar); i++){
+		digit = receivedChar[i + 2];
 			if (TrueINT(digit, 48, 57)){
 				Recived_MSG[i] = digit;
-				corruput = false;
 			}
 			else {
-				corruput = true;
+				break;
 			}
 		}
+
 		//Verify msg length
 		Recived_Value = atoi(Recived_MSG);
 		int MSG_Size = trunc(log10(Recived_Value)) + 1;
-		if (MSG_Size == Recived_Length){
+		String Recived_Length_String = String(Recived_Length);// converting a constant char into a String
+		if (MSG_Size == Recived_Length_String.toInt()){
 			corruput = false;
 		}
 		else{
@@ -258,15 +266,15 @@ void Cockpit_Arduino(){
 		break;
 	}
 
-	if (corruput = false){
+	if (corruput == false){
 		if (Recived_ID == 'S'){
-			Solar_Curret = Recived_Value;
+			Solar_Curret = LEM_HTFS_Current(Recived_Value, Vref, HallEffect_SolarOutput_NominalCurrent);
 		}
 		else if (Recived_ID == 'B'){
-			Battery_Curret = Recived_Value;
+			Battery_Curret = LEM_HTFS_Current(Recived_Value, Vref, HallEffect_BatteryInput_NominalCurrent);
 		}
 		else if (Recived_ID == 'M'){
-			Motor_Curret = Recived_Value;
+			Motor_Curret = LEM_HTFS_Current(Recived_Value, Vref, HallEffect_MotorInput_NominalCurrent);
 		}
 	}
 
