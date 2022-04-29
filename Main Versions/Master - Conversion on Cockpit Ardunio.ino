@@ -36,7 +36,7 @@ int HallEffect_BatteryInput_Pin = A1;
 int HallEffect_MotorInput_Pin = A2;
 
 //Sensor Primary Nominal rms current
-int HallEffect_SolarOutput_NominalCurrent = 100; 
+int HallEffect_SolarOutput_NominalCurrent = 200; 
 int HallEffect_BatteryInput_NominalCurrent = 200;
 int HallEffect_MotorInput_NominalCurrent = 200;
 
@@ -100,6 +100,10 @@ double LEM_HTFS_Current(int Digital_Sensor_Reading, int Vref, int Ipn){
 	return Current;
 }
 
+//-----------------------------------------------------------//
+/**
+	Placeholder
+*/
 double LEM_HASS_Current(int Digital_Sensor_Reading, int Vref, int Ipn){
 
 	//Digtial to Analog converter
@@ -306,7 +310,10 @@ void Cockpit_Arduino(){
 			Motor_Curret = Recived_Value;
 		}
 	}
+<<<<<<< HEAD
 
+=======
+>>>>>>> parent of f58c09b (add debug stuff in cockpit ardunion code)
 }
 
 
