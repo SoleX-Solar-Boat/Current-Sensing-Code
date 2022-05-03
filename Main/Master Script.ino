@@ -3,28 +3,30 @@
 	28.03.2022
 	Notes:
 		-Before debugging::: CHECK PIN VALUES, CHECK COMMON GROUND!!!!!
-		-Issue when sensor digital value = 0, so current massivley negative that exceeds sensor range
+		-Issue when sensor digital value = 0, so when current massivley negative that exceeds sensor range (i think line 268, if Recived_Value = 0 MSG_Size =0 when should =1)
 	ToDo
-		-Test conversion equations with sensors
 		-LCD_Output
 		-Self Calibration, need access to solar boat completed electronics
 
 */
+
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include<math.h>
+
 //-----------------------------------------------------------//
 /**
 	*Values and variables for use through out the project
 */
-bool Calibration_State = false;
 float Solar_Curret;
 float Battery_Curret;
 float Motor_Curret;
+
 //-----------------------------------------------------------//
 /**
-	*Hall Effect Sensor Calibration
-	*HallEffect_Location_Pin, where location = PLACEHOLDER
+	Hall Effect Sensor Calibration
+	HallEffect_"SensorName"_Pin = Pin connected to on board
+	HallEffect_"SensorName"_NominalCurrent = 
 */
 int HallEffect_SolarOutput_Pin = A0; 
 int HallEffect_BatteryInput_Pin = A1;
@@ -38,13 +40,17 @@ int HallEffect_MotorInput_NominalCurrent = 200;
 //Sensor output calibration
 int Analog_V_Range = 5;
 int Analog_Bit_Range = 1024;
+
 //-----------------------------------------------------------//
 /**
 	Serial communication Setup
+	RX on Sensor connects to TX on Cockpit
+	TX on sensor connects to RX in Cockpit
 */
 int pinRX = 10;
 int pinTX = 11;
 SoftwareSerial softSerial(pinRX, pinTX);
+
 //message marker to help with verfication
 const char charStartMarker = '<'; //<
 const char charEndMarker = '>'; //>
@@ -53,19 +59,39 @@ const char BatteryInput_ID = 'B'; //B
 const char MotorInput_ID = 'M'; //M
 const byte numBytes = 8;
 char receivedChar[numBytes];
-//int numBytes = 6;
-//char receivedChar[numBytes];
 byte numReceived = 0;
 boolean newData = false;
 boolean newInstruction = false;
-/**
-	 variables for serial communication
-*/
+
+//variables for serial communication
 int softwareBaudRate = 9600;
 int delayAfterSendingMessage = 1000;
 float countOFAllBufferResets = 0.00;
 float countOfAllMessagesCorreclyBounded = 0.00;
 float bufferResetMax = 400000000.00; //4294967040
+
+//-----------------------------------------------------------//
+/**
+	LCD setup - No longer usable purley example, taken from arduino example LCD circuit
+	  The circuit:
+ 	* LCD RS pin to digital pin 12
+ 	* LCD Enable pin to digital pin 11
+ 	* LCD D4 pin to digital pin 5
+ 	* LCD D5 pin to digital pin 4
+ 	* LCD D6 pin to digital pin 3
+ 	* LCD D7 pin to digital pin 2
+ 	* LCD R/W pin to ground
+ 	* LCD VSS pin to ground
+ 	* LCD VCC pin to 5V
+ 	* 10K resistor:
+	* ends to +5V and ground
+ 	* wiper to LCD VO pin (pin 3)
+*/
+//#include <LiquidCrystal.h>
+//const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+//LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+
 //-----------------------------------------------------------//
 /**
 	Equation for converting the analog volatge value into a current reading for the LEM Current Transducer HTFS200...800p
@@ -85,18 +111,19 @@ double LEM_HTFS_Current(int Digital_Sensor_Reading, int Vref, int Ipn){
 
 //-----------------------------------------------------------//
 /**
-	Placeholder
+	Equation of LEM_HASS sensor
+	Vout = Vref +-(0.625*Ip/Ipn)
+	Vout = Sensor Voltage
+	Ip = Current
+	Ipn = Sensor Primary Nominal rms current
 */
 double LEM_HASS_Current(int Digital_Sensor_Reading, int Vref, int Ipn){
 
 	//Digtial to Analog converter
 	double conversion_factor = Analog_Bit_Range/Analog_V_Range;
 	double Analog_Sensor_Reading = Digital_Sensor_Reading/conversion_factor;
-
 	//Voltage to Current Reading
 	double Current = (((Analog_Sensor_Reading-Vref)/0.625)*Ipn);
-
-
 	return Current;
 }
 
@@ -111,36 +138,46 @@ bool TrueINT(int val, int minimum, int maximum)
 
 //-----------------------------------------------------------//
 /**
-	Placeholder
+
 */
 void setup() {
 	Serial.begin(softwareBaudRate);
 	Serial.flush();
 	softSerial.begin(softwareBaudRate);
 	softSerial.flush();
+
+	// set up the LCD's number of columns and rows:
+  	//lcd.begin(16, 2); for when LCD is re-installed
 }
 
 //-----------------------------------------------------------//
 /**
-	Placeholder
+	JUST HERE for when calibration class is written
 */
 void calibration(){
 }
 
 //-----------------------------------------------------------//
 /**
-	Placeholder
+	OLD, works for display individual reading on small LCD, just here as example
+	Currently not called anywhere
 */
 void LCD_Output(){
+	lcd.setCursor(0, 0);
+	lcd.print("Solar Panels:");
+	lcd.setCursor(0, 1);
+	lcd.print(Solar_Curret);
 }
 
 //-----------------------------------------------------------//
 /**
-	PlaceHolder
+	Sends message with Id maker, Length marker, start and end markers
 */
 void Wrap_Send_Message(int Reading, char ID_Marker){
+	String message = String(Reading); //Convert int reading into string
+
+	//determing length of msg so can be used for verification on recving ardiuno
 	int length;
-	String message = String(Reading);
 	if (Reading >= 1000){
 		length = 4;
 	}
@@ -153,17 +190,18 @@ void Wrap_Send_Message(int Reading, char ID_Marker){
 	if (Reading >= 0 && Reading <=9){
 		length = 1;
 	}
+	//Sending message
 	softSerial.print(charStartMarker);
 	softSerial.print(length);
 	softSerial.print(ID_Marker);
 	softSerial.print(message);
 	softSerial.print(charEndMarker);
-	delay(delayAfterSendingMessage);
+	delay(delayAfterSendingMessage); //Trust me, probaly could decrease the time but when no delay chance of message corruption and/or message skip increases
 }
 
 //-----------------------------------------------------------//
 /**
-	Placeholder
+	Receives a message wrapped using start and end markers to identify contents source: J.Hinselwood
 */
 void recv_Wraped_Message(){
 	static boolean recvInProgress = false;
@@ -204,28 +242,26 @@ void recv_Wraped_Message(){
 
 //-----------------------------------------------------------//
 /**
-	Placeholder
+	Controls the sensor arduino located in electronics bay and connected to the 
+	hall effect sensors, simple read value (analogRead) and send message (Wrap_Send_Message)
 */
 void Sensor_Arduino() {
 	//Read data and send Messages
 	Wrap_Send_Message(analogRead (HallEffect_SolarOutput_Pin), SolarOutput_ID);
-	delay(delayAfterSendingMessage);
 	Wrap_Send_Message(analogRead (HallEffect_MotorInput_Pin), MotorInput_ID);
-	delay(delayAfterSendingMessage);
 	Wrap_Send_Message(analogRead (HallEffect_BatteryInput_Pin), BatteryInput_ID);
-	delay(delayAfterSendingMessage);
 }
 
 //-----------------------------------------------------------//
 /**
-	Placeholder
+	Control cockpit arduino, includes message extraction, verification and assignment to relevant sensor
 */
 void Cockpit_Arduino(){
 	double Vref = 2.5;
 
 	recv_Wraped_Message();
 
-	char Recived_Length = receivedChar[0];
+	char Recived_Length = receivedChar[0]; 
 	char Recived_ID = receivedChar[1];
 	char Recived_MSG[numBytes];
 	memset(Recived_MSG, 0, sizeof Recived_MSG);
@@ -233,30 +269,33 @@ void Cockpit_Arduino(){
 	char digit;
 	
 	bool corruput = false;
+	//will exit shoud at anytime the message be corrupt
 	while (corruput == false){
 
-		//First Corrupt check
-		if (Recived_ID == 'S' || Recived_ID == 'B' || Recived_ID == 'M') {
+		//First Corrupt check, see of Sensor ID is one of the allowed
+		if (Recived_ID == SolarOutput_ID || Recived_ID == BatteryInput_ID || Recived_ID == MotorInput_ID) {
 			corruput = false;
 		}
 		else{
 			corruput = true;
 		}
 
-		//Extract msg (not working!!)
+		//Extract msg
 		for (int i = 0; i <= sizeof(receivedChar); i++){
-		digit = receivedChar[i + 2];
-			if (TrueINT(digit, 48, 57)){
+		digit = receivedChar[i + 2]; //+ 2 as first 2 Chracters of recivedchar corrospond to length and sensor ID
+			if (TrueINT(digit, 48, 57)){ //Ascii 48 = 0, Ascii 57 = 9, the cause of this is a lot of different data types used throughout
 				Recived_MSG[i] = digit;
+				corruput = false;
 			}
 			else {
+				//This is here becuase if using corruput = false; then cannont enter assigning procedure, should a corrupt value be found it exits out and will be handled by lenght check, yes it could be better but i have yet to figure out a way
 				break;
 			}
 		}
 
 		//Verify msg length
-		Recived_Value = atoi(Recived_MSG);
-		int MSG_Size = trunc(log10(Recived_Value)) + 1;
+		Recived_Value = atoi(Recived_MSG); //Char[] to int
+		int MSG_Size = trunc(log10(Recived_Value)) + 1; //extracting size of recived message 
 		String Recived_Length_String = String(Recived_Length);// converting a constant char into a String
 		if (MSG_Size == Recived_Length_String.toInt()){
 			corruput = false;
@@ -267,6 +306,7 @@ void Cockpit_Arduino(){
 		break;
 	}
 
+	//Assinging of extracted value to correct global variable
 	if (corruput == false){
 		if (Recived_ID == 'S'){
 			Solar_Curret = LEM_HTFS_Current(Recived_Value, Vref, HallEffect_SolarOutput_NominalCurrent);
@@ -278,17 +318,12 @@ void Cockpit_Arduino(){
 			Motor_Curret = LEM_HTFS_Current(Recived_Value, Vref, HallEffect_MotorInput_NominalCurrent);
 		}
 	}
-
-	//debug
-	Serial.println(Recived_Length);
-	Serial.println(Recived_ID);
-	Serial.println(Recived_MSG);
-
+	//send to lcd
 }
 
 //-----------------------------------------------------------//
 /**
-	Choose which one your running
+	Runs the Arduino, chose between Cockpit_Arduino or Sensor_Arduino
 */
 void loop() {
 	Cockpit_Arduino();
