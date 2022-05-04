@@ -9,9 +9,11 @@
 		-Self Calibration, need access to solar boat completed electronics
 
 	If your reading this and trying to understand my logic in places just understand, it works! Function before form, if you want to make it 
-	neat and tidy go ahead but hopefully its pretty self explaintory. There are some overarching issues namley the ammount of times i switch datatypes
-	for the same peice of information, its frankly hilarious and should be adressed, but hey it works. Like i think the messages are read as Char, become
-	strings then ints then maybe dobule, at this point im too afraiad to actually work out how badly i've screwed up, but it works. 
+	neat and tidy go ahead but hopefully its pretty self explaintory. But in all honesty its all ready down from about double, if you want to 
+	make progress LN187 to 200 and Cockpit_Ardiuno() could do with some work.
+
+	There are some overarching issues namley the ammount of times i switch datatypes for the same peice of information, its frankly hilarious 
+	and should be adressed, but hey it works. Like i think the messages are read as Char, become strings then ints then maybe dobule.
 
 */
 
