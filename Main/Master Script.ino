@@ -1,12 +1,17 @@
  /**
 	Current Sensing, Processing and Display Code - K. Lister-Grotz & M. Richmond
-	28.03.2022
+	03.05.2022
 	Notes:
 		-Before debugging::: CHECK PIN VALUES, CHECK COMMON GROUND!!!!!
 		-Issue when sensor digital value = 0, so when current massivley negative that exceeds sensor range (i think line 268, if Recived_Value = 0 MSG_Size =0 when should =1)
 	ToDo
 		-LCD_Output
 		-Self Calibration, need access to solar boat completed electronics
+
+	If your reading this and trying to understand my logic in places just understand, it works! Function before form, if you want to make it 
+	neat and tidy go ahead but hopefully its pretty self explaintory. There are some overarching issues namley the ammount of times i switch datatypes
+	for the same peice of information, its frankly hilarious and should be adressed, but hey it works. Like i think the messages are read as Char, become
+	strings then ints then maybe dobule, at this point im too afraiad to actually work out how badly i've screwed up, but it works. 
 
 */
 
@@ -265,8 +270,8 @@ void Cockpit_Arduino(){
 	char Recived_ID = receivedChar[1];
 	char Recived_MSG[numBytes];
 	memset(Recived_MSG, 0, sizeof Recived_MSG);
-	int Recived_Value = 0;
-	char digit;
+	int Recived_Value = 0; //int version of Recived_MSG
+	char digit; //just a placeholder thing for use on ln290, could probably get rid off?
 	
 	bool corruput = false;
 	//will exit shoud at anytime the message be corrupt
